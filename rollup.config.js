@@ -25,7 +25,11 @@ export default {
   plugins: [
     clear({ targets: ["dist"] }),
     resolve(),
-    commonjs(),
+    commonjs({
+      namedExports: {
+        'stack': ['stack']
+      }
+    }),
     typescript({tsconfig: "./tsconfig.json"}),
     screeps({config: cfg, dryRun: cfg == null})
   ]

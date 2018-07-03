@@ -1,18 +1,32 @@
 {
+  "files": [
+    "src/**/*.js"
+  ],
+  "tmp": {
+    "noimplicitany": false,
+    "noimplicitthis": false,
+    "strictnullchecks": false,
+    "strictPropertyInitialization": false
+  },
   "compilerOptions": {
-    "module": "es2015",
-    "target": "es5",
+    "module": "commonjs",
+    "target": "es6",
     "moduleResolution": "Node",
-    "outDir": "dist",
+    "outDir": "distjs",
     "baseUrl": "src/",
-    "sourceMap": true,
+    "sourceMap": false,
     "strict": true,
     "experimentalDecorators": true,
     "noImplicitReturns": true,
     "allowSyntheticDefaultImports": true,
-    "allowUnreachableCode": false
+    "allowUnreachableCode": false,
+    "allowJs": true,
+    "strictPropertyInitialization": false
   },
+  "include": ["src/**/*"],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    "rollup.config.js"
   ]
 }
