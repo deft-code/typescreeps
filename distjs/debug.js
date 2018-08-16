@@ -48,7 +48,8 @@ class Debuggable {
         }
     }
     dlog(...str) {
-        this.log(...str);
+        if (this.debug)
+            this.log(...str);
     }
     log(...str) {
         console.log(location(2), this.toString(), ...str);
@@ -76,7 +77,22 @@ function errStr(err) {
     switch (err) {
         case OK: return 'ok';
         case ERR_TIRED: return 'tired';
-        default: return 'ERR' + err;
+        case -6: return 'notenuf'; // ERR_NOT_ENOUGH_*
+        default: return 'ERR' + -err;
     }
 }
 exports.errStr = errStr;
+function dirStr(dir) {
+    switch (dir) {
+        case LEFT: return 'W';
+        case TOP_LEFT: return 'NW';
+        case TOP: return 'N';
+        case TOP_RIGHT: return 'NE';
+        case RIGHT: return 'E';
+        case BOTTOM_RIGHT: return 'SE';
+        case BOTTOM: return 'S';
+        case BOTTOM_LEFT: return 'SW';
+    }
+    return 'none';
+}
+exports.dirStr = dirStr;

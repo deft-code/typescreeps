@@ -1,4 +1,4 @@
-import { Perma } from './perma'
+import { Perma } from 'perma'
 
 const gStructs = new Map<string, PStructure>()
 
@@ -56,6 +56,8 @@ export class PSpawn extends PEnergyStructure<StructureSpawn> {
         }
         return this.o.spawnCreep(body, name, opt)
     }
+
+    get spawning() { return this.o.spawning }
 }
 PSpawn.makeProp(StructureSpawn)
 declare global {

@@ -1,4 +1,4 @@
-import { Perma } from "./perma";
+import { Perma } from "perma";
 
 export class PSource extends Perma<Source> {
     _spots: Array<RoomPosition> = []
@@ -17,11 +17,17 @@ export class PSource extends Perma<Source> {
         return this._spots
     }
 
+    get name() {
+        return 'src' + this.pos.xy
+    }
+
+    get spot() {
+        return this.ai.getSpot(this.name) || this.ai.bestSpot(this.pos)
+    }
+
     get energy() { return this.o.energy }
     get ticksToRegeneration() { return this.o.ticksToRegeneration }
 }
-
-
 PSource.makeProp(Source)
 declare global {
     interface Source {

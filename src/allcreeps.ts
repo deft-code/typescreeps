@@ -1,5 +1,5 @@
-import { PCreep } from './creep'
-import { Role } from './roles/role';
+import { PCreep } from 'creep'
+import { Role } from 'roles/role';
 
 const gCreeps = new Map<string, PCreep>()
 

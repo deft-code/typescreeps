@@ -1,5 +1,5 @@
-import { Perma } from './perma'
-import * as debug from './debug'
+import { Perma } from 'perma'
+import * as debug from 'debug'
 
 const allies = ['HailHydra']
 
@@ -21,6 +21,8 @@ export class PCreep extends Perma<Creep> {
 
     get room() { return this.o.room }
     get ai() { return this.o.room.ai }
+
+    get name() { return this.o.name }
 
     get hits() { return this.o.hits; }
     get hitsMax() { return this.o.hitsMax; }

@@ -1,15 +1,17 @@
-import './rooms/room';
+import 'rooms/room';
+import 'prototypes';
 
-import * as shed from './shed';
-import * as debug from './debug';
+import * as shed from 'shed';
+import * as debug from 'debug';
 
-import './teams/allteams';
-import './creep'
-import './allcreeps'
-import './roomobjs'
+import 'logic/alllogic';
+import 'creep'
+import 'allcreeps'
+import 'roomobjs'
 
-import { findAI } from './rooms/allrooms';
-import { RoomAI } from './rooms/room';
+import { findAI } from 'ai/allai';
+import { RoomAI } from 'ai/ai';
+import { run as spawnersRun } from 'spawners';
 
 declare global {
   function findAI(room: string): RoomAI;
@@ -18,22 +20,15 @@ declare var global: any;
 global.findAI = findAI;
 
 const when = Game.time % 10
-
-function* foo(n: number) {
-  if (n <= 0) return false
-  for (let i = 0; i < n; i++) {
-    yield 'foo' + i
-  }
-  return true
-}
+declare const require: {timestamp: number}
 
 export function loop() {
-  debug.log('version 1', when)
+  debug.log('version 1', when, require.timestamp % 10)
 
   const ais = _.map(Game.rooms, r => r.ai);
   shed.run(ais, 500, ai => ai.init());
 
-  const teams = _.map(Game.flags, f => f.team);
+  const logic = _.map(Game.flags, f => f.logic);
 
   const combats = _.filter(ais, ai => ai.hostiles.length > 0);
   shed.run(combats, 500, ai => ai.run());
@@ -47,9 +42,12 @@ export function loop() {
   shed.run(remotes, 3000, ai => ai.run());
   shed.run(remotes, 3000, ai => ai.after());
 
+  const services = [spawnersRun]
+  shed.run(services, 4000, r => r())
+
   shed.run(combats, 6000, ai => ai.optional())
   shed.run(claimed, 7000, ai => ai.optional())
   shed.run(remotes, 8000, ai => ai.optional())
 
-  shed.run(teams, 9000, team => team.darkRun());
+  shed.run(logic, 9000, team => team.darkRun());
 }

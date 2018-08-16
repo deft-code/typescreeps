@@ -27,7 +27,7 @@ gulp.task('lint', function() {
 
 
 gulp.task('clean', function () {
-  return gulp.src(['dist/', 'distjs/'], { read: false, allowEmpty: true })
+  return gulp.src(['dist/*', 'distjs/*'], { read: false, allowEmpty: true })
     .pipe(clean());
 });
 

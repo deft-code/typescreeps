@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const perma_1 = require("./perma");
+const perma_1 = require("perma");
 const allies = ['HailHydra'];
 class PCreep extends perma_1.Perma {
     constructor(creep) {
@@ -15,6 +15,7 @@ class PCreep extends perma_1.Perma {
     toString() { return `[creep ${this.o.name}]`; }
     get room() { return this.o.room; }
     get ai() { return this.o.room.ai; }
+    get name() { return this.o.name; }
     get hits() { return this.o.hits; }
     get hitsMax() { return this.o.hitsMax; }
     get hurts() { return this.hitsMax - this.hits; }

@@ -1,4 +1,5 @@
-import * as debug from "./debug";
+import * as debug from "debug";
+import { toXY } from "Rewalker";
 
 interface Wrapped extends RoomObject {
     id: string;
@@ -52,6 +53,10 @@ export class Perma<Orig extends Wrapped> extends debug.Debuggable {
     get pos() {
         if (this.o) return this._pos = this.o.pos;
         return this._pos;
+    }
+
+    get xy() {
+        return toXY(this.pos)
     }
 
     get room() { return this.o.room }

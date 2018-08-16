@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const perma_1 = require("./perma");
+const perma_1 = require("perma");
 const gStructs = new Map();
 function makeStruct(struct) {
     switch (struct.structureType) {
@@ -39,6 +39,7 @@ class PSpawn extends PEnergyStructure {
         }
         return this.o.spawnCreep(body, name, opt);
     }
+    get spawning() { return this.o.spawning; }
 }
 exports.PSpawn = PSpawn;
 PSpawn.makeProp(StructureSpawn);

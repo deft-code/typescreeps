@@ -57,7 +57,7 @@ export class Debuggable {
     }
 
     dlog(...str: any[]) {
-        this.log(...str);
+        if (this.debug) this.log(...str);
     }
 
     log(...str: any[]) {
@@ -87,6 +87,21 @@ export function errStr(err: ScreepsReturnCode) {
     switch (err) {
         case OK: return 'ok'
         case ERR_TIRED: return 'tired'
-        default: return 'ERR' + err
+        case -6: return 'notenuf' // ERR_NOT_ENOUGH_*
+        default: return 'ERR' + -err
     }
+}
+
+export function dirStr(dir: DirectionConstant) {
+    switch (dir) {
+        case LEFT: return 'W'
+        case TOP_LEFT: return 'NW'
+        case TOP: return 'N'
+        case TOP_RIGHT: return 'NE'
+        case RIGHT: return 'E'
+        case BOTTOM_RIGHT: return 'SE'
+        case BOTTOM: return 'S'
+        case BOTTOM_LEFT: return 'SW'
+    }
+    return 'none'
 }

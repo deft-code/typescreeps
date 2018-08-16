@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const perma_1 = require("./perma");
+const perma_1 = require("perma");
 class PSource extends perma_1.Perma {
     constructor() {
         super(...arguments);
@@ -19,6 +19,12 @@ class PSource extends perma_1.Perma {
             }
         }
         return this._spots;
+    }
+    get name() {
+        return 'src' + this.pos.xy;
+    }
+    get spot() {
+        return this.ai.getSpot(this.name) || this.ai.bestSpot(this.pos);
     }
     get energy() { return this.o.energy; }
     get ticksToRegeneration() { return this.o.ticksToRegeneration; }

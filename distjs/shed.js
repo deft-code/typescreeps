@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const debug = require("./debug");
+const debug = require("debug");
 const kMaxCPU = 350;
 function canRun(cpu, bucket) {
     if (cpu > kMaxCPU) {

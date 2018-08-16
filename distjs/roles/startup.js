@@ -6,7 +6,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const role_1 = require("./role");
+const role_1 = require("roles/role");
+const spawners_1 = require("spawners");
+const work_1 = require("./work");
 function sourceFree(ai) {
     return function (mat, roomName) {
         if (roomName !== ai.name || !ai.room)
@@ -21,68 +23,25 @@ function sourceFree(ai) {
         return mat;
     };
 }
-let Startup = class Startup extends role_1.Role {
+let Startup = class Startup extends work_1.Work {
+    static spawner(name) {
+        return new spawners_1.StaticLocalSpawner(name, MOVE, CARRY, WORK);
+    }
     *loop() {
         while (true) {
             if (!this.carry.energy) {
-                yield* this.harvestSources();
+                yield* this.rechargeHarvest();
             }
             else {
-                yield* this.upgradeAll();
-            }
-        }
-    }
-    *upgradeAll() {
-        const ctrl = this.mission.ai.controller;
-        if (!ctrl)
-            return false;
-        while (this.carry.energy) {
-            switch (this.upgrade(ctrl)) {
-                case OK:
-                    yield 'upgrade';
-                    break;
-                case ERR_NOT_IN_RANGE:
-                    yield this.moveRange(ctrl);
-                    break;
-                default: return false;
-            }
-        }
-        return true;
-    }
-    *rechargeHarvest() {
-        return (yield* this.recharge(this.carryTotal / 3)) ||
-            (yield* this.harvestSources()) ||
-            (yield* this.recharge());
-    }
-    *recharge(limit = 0) {
-        return false;
-    }
-    goodSource(src) {
-        return src.energy > 0 || this.pos.getRangeTo(src.pos) > src.ticksToRegeneration;
-    }
-    *harvestSources() {
-        const sources = _.filter(this.mission.ai.sources, s => this.goodSource(s));
-        if (!sources)
-            return;
-        const targets = _.map(sources, s => ({ pos: s.pos, range: 1 }));
-        const i = this.pickMove(targets, { matrixLayer: sourceFree(this.mission.ai) });
-        const src = sources[i];
-        yield* this.harvestSource(src);
-    }
-    *harvestSource(src) {
-        while (this.carryFree && this.goodSource(src)) {
-            switch (this.harvest(src)) {
-                case OK:
-                    yield 'harvest';
-                    break;
-                case ERR_NOT_IN_RANGE:
-                    yield this.moveNear(src);
-                    break;
-                default: return;
+                (yield* this.upgradeAll(1500)) ||
+                    (yield* this.fillEnergyOrdered()) ||
+                    (yield* this.buildOrdered()) ||
+                    (yield* this.upgradeAll());
             }
         }
     }
     after() {
+        this.idleNom();
     }
 };
 Startup = __decorate([

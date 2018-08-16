@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const creep_1 = require("./creep");
-const role_1 = require("./roles/role");
+const creep_1 = require("creep");
+const role_1 = require("roles/role");
 const gCreeps = new Map();
 function clean() {
 }

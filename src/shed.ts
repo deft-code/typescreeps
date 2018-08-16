@@ -1,4 +1,4 @@
-import * as debug from './debug';
+import * as debug from 'debug';
 
 const kMaxCPU = 350
 

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const debug = require("./debug");
+const debug = require("debug");
+const Rewalker_1 = require("Rewalker");
 class Perma extends debug.Debuggable {
     constructor(o) {
         super();
@@ -36,6 +37,9 @@ class Perma extends debug.Debuggable {
         if (this.o)
             return this._pos = this.o.pos;
         return this._pos;
+    }
+    get xy() {
+        return Rewalker_1.toXY(this.pos);
     }
     get room() { return this.o.room; }
     get ai() {
