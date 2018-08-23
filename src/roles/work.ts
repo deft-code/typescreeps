@@ -1,6 +1,5 @@
 import { Carry } from "./carry";
-import { PSource } from "roomobjs";
-import { PController } from "structures";
+import { PController, PSource, } from "perma";
 import { errStr } from "debug";
 
 export class Work extends Carry {
@@ -51,12 +50,14 @@ export class Work extends Carry {
     }
 
     harvest(sm: PSource) {
+        if(!sm.o) return ERR_INVALID_TARGET
         const err = this.o.harvest(sm.o)
         if (err === OK) this._intents.melee = 'harvest'
         return err
     }
 
     upgrade(ctrl: PController) {
+        if(!ctrl.o) return ERR_INVALID_TARGET
         const err = this.o.upgradeController(ctrl.o)
         if (err === OK) this.intendmr('upgrade')
         return err
@@ -100,7 +101,7 @@ export class Work extends Carry {
     *upgradeAll(min = 0) {
         const ctrl = this.mission.ai.controller
         if (!ctrl) return false
-        if (min > 0 && ctrl.o.ticksToDowngrade > min) return false
+        if (min > 0 && ctrl.ticksToDowngrade > min) return false
         while (this.carry.energy) {
             switch (this.upgrade(ctrl)) {
                 case OK: yield 'upgrade'; break

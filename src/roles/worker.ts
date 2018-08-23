@@ -1,11 +1,11 @@
 import { Role } from "./role";
 import { Work } from "./work";
-import { StaticLocalSpawner } from "spawners";
+import { DynamicLocalSpawner } from "spawners";
 
 @Role.register
 class Worker extends Work {
     static spawner(name: string) {
-        return new StaticLocalSpawner(name, MOVE, CARRY, CARRY, WORK)
+        return new DynamicLocalSpawner(name, [CARRY, WORK])
     }
 
     *loop(): IterableIterator<string | boolean> {
@@ -13,13 +13,14 @@ class Worker extends Work {
             if (!this.carry.energy) {
                 yield* this.rechargeHarvest()
             } else {
-                yield* this.buildOrdered()
+                (yield* this.buildOrdered()) ||
+                    (yield* this.upgradeAll())
             }
         }
     }
 
     after() {
-        if(this.idleNom() || this.carryFree < this.carryTotal) {
+        if (this.idleNom() || this.carryFree < this.carryTotal) {
             this.idleBuildRepair()
         }
     }

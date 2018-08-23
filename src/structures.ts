@@ -65,12 +65,3 @@ declare global {
         p: PSpawn
     }
 }
-
-export class PController extends POwnedStructure<StructureController> {
-}
-PController.makeProp(StructureController)
-declare global {
-    interface StructureController {
-        p: PController
-    }
-}

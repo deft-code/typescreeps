@@ -6,7 +6,7 @@ export class StartupMission extends MissionLogic {
     }
     run() {
         super.run()
-        return this.ensureRole('startup', 1) ||
+        return this.ensureRole('startup', 2) ||
             this.ensureRole('walker', 0) ||
             this.ensureRole('aphid', 1) ||
             this.ensureRole('aphod', 1) ||

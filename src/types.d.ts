@@ -9,9 +9,22 @@ interface RoomPosition {
     xy: number
 }
 
+type AllStructureTypes = {
+    container: StructureContainer
+    extension: StructureExtension
+    road: StructureRoad
+    spawn: StructureSpawn
+    tower: StructureTower
+}
+
+
 interface Structure {
     hurts: number
 }
+
+type StoreStructure = StructureContainer |
+    StructureTerminal |
+    StructureStorage;
 
 interface StructureContainer {
     storeTotal: number
@@ -30,4 +43,31 @@ interface StructureTerminal {
 
 type EnergyStruct = StructureSpawn | StructureExtension | StructureLab | StructureLink | StructureNuker | StructurePowerSpawn | StructureTower
 
-type StoreStructure = StructureStorage | StructureContainer | StructureTerminal
+interface StructureSpawn {
+    energyFree: number
+}
+
+interface StructureExtension {
+    energyFree: number
+}
+
+interface StructureLab {
+    energyFree: number
+}
+
+interface StructureLink {
+    energyFree: number
+}
+
+interface StructureNuker {
+    energyFree: number
+}
+
+interface StructurePowerSpawn {
+    energyFree: number
+}
+
+interface StructureTower {
+    energyFree: number
+}
+

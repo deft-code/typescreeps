@@ -73,7 +73,8 @@ export class Carry extends Role {
             const err = this.o.transfer(estruct, RESOURCE_ENERGY)
             switch (err) {
                 case ERR_NOT_IN_RANGE: yield this.moveNear(estruct); break
-                case OK: yield "transfer" + estruct.pos.xy
+                case OK: yield "transfer" + estruct.pos.xy; break;
+
                 default: return false
             }
         }
@@ -126,6 +127,7 @@ export class Carry extends Role {
 
         this.log("energies", es.length, es)
         const e = this.planNear(es)
+        if (!e) return false
         if (e.store || e.energy) {
             return yield* this.taskWithdraw(e, RESOURCE_ENERGY)
         }

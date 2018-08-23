@@ -1,8 +1,8 @@
 import { defaultRewalker } from "Rewalker";
-import { PSpawn } from "structures";
 import { MissionLogic } from "logic/mission";
 import { Role } from "roles/role";
 import { log } from "debug";
+import { buildBody } from "body";
 
 const rewalker = defaultRewalker()
 declare class RoomAI {
@@ -55,10 +55,12 @@ export class Spawner {
   }
 
   allAIs() { return gAis }
-  findAIs() { return gAis }
+  findAIs() { return this.energyAIs(this.distAIs(gAis)) }
+  distAIs(ais: RoomAI[]): RoomAI[] { return ais }
+  energyAIs(ais: RoomAI[]): RoomAI[] { return ais }
 
-  fullAIs() {
-    return gAis.filter(ai => ai.room.energyAvailable >= ai.room.energyCapacityAvailable)
+  fullAIs(ais: RoomAI[]) {
+    return ais.filter(ai => ai.room.energyAvailable >= ai.room.energyCapacityAvailable)
   }
 
   anySpawn(spawns: StructureSpawn[]): StructureSpawn | undefined {
@@ -100,19 +102,19 @@ export function run() {
 }
 
 export class LocalSpawner extends Spawner {
-  findAIs() {
-    let ais: RoomAI[] = []
+  distAIs(ais: RoomAI[]) {
+    let ret: RoomAI[] = []
     let dist = 11
-    for (const ai of gAis) {
+    for (const ai of ais) {
       const d = rewalker.getRouteDist(this.mission.pos.roomName, ai.name)
       if (d < dist) {
         dist = d
-        ais = [ai]
+        ret = [ai]
       } else if (d === dist) {
-        ais.push(ai)
+        ret.push(ai)
       }
     }
-    return ais
+    return ret
   }
 }
 
@@ -125,9 +127,19 @@ export class StaticLocalSpawner extends LocalSpawner {
   body(ai: RoomAI) { return this._body }
 }
 
+export class DynamicLocalSpawner extends LocalSpawner {
+  constructor(name: string, public parts: BodyPartConstant[]) {
+    super(name)
+  }
+  energyAIs(ais: RoomAI[]) { return this.fullAIs(ais) }
+  body(ai: RoomAI) {
+    return buildBody(this.parts, ai.room!.energyAvailable, 2)
+  }
+}
+
 export class CloseSpawner extends Spawner {
-  findAIs() {
-    const mdist = _(this.allAIs())
+  distAIs(ais: RoomAI[]) {
+    const mdist = _(ais)
       .map(ai => rewalker.getRouteDist(ai.name, this.mission.ai.name))
       .min()
     return _.filter(gAis, ai =>
@@ -135,8 +147,12 @@ export class CloseSpawner extends Spawner {
   }
 }
 
+export class DynamicCloseSpawner extends CloseSpawner {
+
+}
+
 export class RemoteSpawner extends Spawner {
-  findAIs() {
+  distAIs(ais: RoomAI[]) {
     const mdist = _(this.allAIs())
       .map(ai => rewalker.getRouteDist(ai.name, this.mission.ai.name))
       .filter(d => d > 0)
@@ -149,7 +165,7 @@ export class RemoteSpawner extends Spawner {
 }
 
 export class MaxSpawner extends Spawner {
-  findAIs() {
+  distAIs(ais: RoomAI[]) {
     const close = _.filter(this.allAIs(), ai => rewalker.getRouteDist(ai.name, this.mission.ai.name) <= 10)
     const mlvl = _.max(close.map(ai => ai.room.controller!.level))
     const lvl = _.filter(close, ai => ai.room.controller!.level >= mlvl)

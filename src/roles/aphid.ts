@@ -1,10 +1,17 @@
 import { Role } from "./role";
 import { defaultRewalker } from "Rewalker"
-import { StaticLocalSpawner, Spawner } from "spawners";
+import { StaticLocalSpawner, Spawner, DynamicLocalSpawner } from "spawners";
 import { RoomAI } from "ai/ai";
-import { PSource } from "roomobjs";
+import { PSource } from "perma";
 import { Work } from "./work";
 import { errStr } from "debug";
+import { buildBody } from "body";
+
+class AphidSpawner extends DynamicLocalSpawner {
+    body(ai: RoomAI) {
+        return buildBody([WORK], Math.min(800, ai.room!.energyAvailable), 8/3, [CARRY]);
+    }
+}
 
 @Role.register
 export class Aphid extends Work {
@@ -120,6 +127,6 @@ export class Aphid extends Work {
     }
 
     static spawner(name: string) {
-        return new StaticLocalSpawner(name, MOVE, WORK, WORK, CARRY)
+        return new AphidSpawner(name, [])
     }
 }

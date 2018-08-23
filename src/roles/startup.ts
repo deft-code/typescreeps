@@ -1,7 +1,6 @@
 import { Role, HasPos } from "roles/role";
-import { PSource } from "roomobjs";
 import { RoomAI } from "ai/ai";
-import { StaticLocalSpawner } from "spawners";
+import { DynamicLocalSpawner } from "spawners";
 import { errStr } from "debug";
 import { Work } from "./work";
 
@@ -19,11 +18,17 @@ function sourceFree(ai: RoomAI) {
     }
 }
 
+class StartupSpawner extends DynamicLocalSpawner {
+    energyAIs(ais: RoomAI[]) {
+        return _.filter(ais, ai => ai.room!.energyAvailable >= 300)
+    }
+}
+
 
 @Role.register
 class Startup extends Work {
     static spawner(name: string) {
-        return new StaticLocalSpawner(name, MOVE, CARRY, WORK)
+        return new StartupSpawner(name, [CARRY, WORK, WORK, WORK])
     }
     *loop(): IterableIterator<string | boolean> {
         while (true) {
@@ -37,7 +42,6 @@ class Startup extends Work {
             }
         }
     }
-
 
     after() {
         this.idleNom()

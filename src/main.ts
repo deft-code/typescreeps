@@ -1,4 +1,3 @@
-import 'rooms/room';
 import 'prototypes';
 
 import * as shed from 'shed';
@@ -7,11 +6,11 @@ import * as debug from 'debug';
 import 'logic/alllogic';
 import 'creep'
 import 'allcreeps'
-import 'roomobjs'
 
 import { findAI } from 'ai/allai';
 import { RoomAI } from 'ai/ai';
 import { run as spawnersRun } from 'spawners';
+import { initCache } from 'cache';
 
 declare global {
   function findAI(room: string): RoomAI;
@@ -24,6 +23,7 @@ declare const require: {timestamp: number}
 
 export function loop() {
   debug.log('version 1', when, require.timestamp % 10)
+  initCache()
 
   const ais = _.map(Game.rooms, r => r.ai);
   shed.run(ais, 500, ai => ai.init());
@@ -50,4 +50,6 @@ export function loop() {
   shed.run(remotes, 8000, ai => ai.optional())
 
   shed.run(logic, 9000, team => team.darkRun());
+
+  initCache()
 }

@@ -1,22 +1,27 @@
 import * as debug from 'debug'
 import * as shed from 'shed'
 import { Role } from 'roles/role'
-import 'structures'
-import { PSpawn, PController } from 'structures';
-import { PSource } from 'roomobjs';
 import { Dictionary } from 'lodash';
 import { fromXY } from 'Rewalker';
+import { PSource, PMineral, PController } from 'perma';
+import { getCache } from 'cache';
 
-function allied(c: Creep) {
-    const allies = ['HailHydra']
-    return _.contains(allies, c.owner.username)
-}
 
 declare global {
     interface RoomMemory {
         spots?: Dictionary<number>
     }
 }
+
+type StructCache = {
+    [P in keyof AllStructureTypes]?: Array<AllStructureTypes[P]>
+}
+
+interface AICacheAll {
+    structs?: StructCache
+}
+
+type AICache = Partial<AICacheAll>
 
 export class RoomAI extends debug.Debuggable {
     constructor(public readonly name: string) {
@@ -36,44 +41,109 @@ export class RoomAI extends debug.Debuggable {
         return 'room'
     }
 
+    _ctrl: PController | null | undefined
     get controller(): PController | null {
-        if (this.room && this.room.controller) return this.room.controller.p
-        return null
-    }
-
-    _structsTime = 0
-    _structs: Dictionary<AnyStructure[]> = {}
-    get structs() {
-        if (this._structsTime !== Game.time && this.room) {
-            this._structs = _.groupBy(this.room.find(FIND_STRUCTURES), s => s.structureType)
+        if (this._ctrl === undefined) {
+            if (!this.room) return null
+            if (this.room.controller) {
+                this._ctrl = new PController(this.room.controller)
+            } else {
+                this._ctrl = null
+            }
         }
-        return this._structs
+        return this._ctrl
     }
 
-    get towers() {
-        return this.structs[STRUCTURE_TOWER] as StructureTower[]
+    _mineral: PMineral | null | undefined
+    get mineral(): PMineral | null {
+        if (this._mineral === undefined) {
+            if (!this.room) return null
+            const mineral = _.first(this.room.find(FIND_MINERALS))
+            if (mineral) {
+                this._mineral = new PMineral(mineral)
+            } else {
+                this._mineral = null
+            }
+        }
+        return this._mineral
     }
 
-    get spawns() {
-        return this.structs[STRUCTURE_SPAWN] as StructureSpawn[]
-    }
-
-    get myspawns() { return this.spawns.filter(s => s.my) }
-
-    get extns() { return this.structs[STRUCTURE_EXTENSION] as StructureExtension[] }
-
-    get roads() { return this.structs[STRUCTURE_ROAD] as StructureRoad[] }
-
-    get containers() { return this.structs[STRUCTURE_CONTAINER] as StructureContainer[] }
-
-    _sources?: Array<PSource>
+    _sources?: PSource[]
     get sources() {
         if (!this._sources) {
             if (!this.room) return []
-            this._sources = _.map(this.room.find(FIND_SOURCES), s => s.p)
+            this._sources = _.map(this.room.find(FIND_SOURCES), s => new PSource(s))
         }
         return this._sources
     }
+
+    get cache(): AICache {
+        return getCache<AICache>(this.name)
+    }
+
+    _structIds: {
+        [type: string]: string[]
+    }
+    _numStructs = 0
+    get structIds() {
+        if (!this.room) return this._structIds
+        const nstructs = this.room.find(FIND_STRUCTURES).length
+        if (nstructs !== this._numStructs) {
+            this.buildStructIds()
+        }
+        return this._structIds
+    }
+
+    buildStructIds() {
+        const structs = this.room.find(FIND_STRUCTURES)
+        this._numStructs = structs.length
+        this._structIds = _.mapValues(
+            _.groupBy(structs, s => s.structureType),
+            ss => ss.map(s => s.id))
+    }
+
+    makeStructs<SType extends keyof AllStructureTypes>(stype: SType): Array<AllStructureTypes[SType]> {
+        type SClass = AllStructureTypes[SType]
+        const ids = this.structIds[stype]
+        if (!ids) return []
+        let rebuild = false
+        let structs = ids.map(id => {
+            const struct = Game.getObjectById<SClass>(id)!
+            if (struct === null) rebuild = true
+            return struct
+        })
+        if (rebuild) {
+            this.buildStructIds()
+            return this.makeStructs(stype)
+        }
+        return structs
+    }
+
+    getStructs<SType extends keyof AllStructureTypes>(stype: SType): AllStructureTypes[SType][] {
+        if (!this.cache.structs) {
+            this.cache.structs = {}
+        }
+        let structs = this.cache.structs
+        if (!structs[stype]) {
+            (<AllStructureTypes[SType][]>this.cache.structs[stype]) = this.makeStructs(stype)
+            //this.cache.structs[stype] = this.makeStructs(stype) as StructCache[SType][]
+
+        }
+        return structs[stype]!
+    }
+
+    get towers() { return this.getStructs(STRUCTURE_TOWER) }
+
+    get spawns() { return this.getStructs(STRUCTURE_SPAWN) }
+    get myspawns() { return this.spawns.filter(s => s.my) }
+
+    get containers() { return this.getStructs(STRUCTURE_CONTAINER) }
+
+    get extns() { return this.getStructs(STRUCTURE_EXTENSION) }
+
+
+    get roads() { return this.getStructs(STRUCTURE_ROAD) }
+
 
     lookForAtRange<T extends keyof AllLookAtTypes>(look: T, pos: RoomPosition, range: number): LookForAtAreaResultArray<AllLookAtTypes[T], T> {
         if (!this.room) return []

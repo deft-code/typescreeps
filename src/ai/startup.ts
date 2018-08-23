@@ -97,6 +97,8 @@ export class StartupAI extends RoomAI {
         super.run()
         this.runTowers()
         joinSpawning(this)
+        const p = new RoomPosition(4, 26, 'E3S1');
+        console.log("tower", p, p.createConstructionSite(STRUCTURE_TOWER));
         // const bests = _.map(this.sources, s => this.bestSpot(s.pos)).forEach(b => {
         //     this.room.visual.circle(b)
         // })
@@ -104,7 +106,8 @@ export class StartupAI extends RoomAI {
         //     this.room.visual.line(s.pos, s.spot, { color: 'red' })
         //     this.room.visual.circle(s.spot)
         // })
-        // this.room.visual.circle(this.bestSpot(this.room.controller!.pos))
+        this.room.visual.circle(this.bestSpot(this.room.controller!.pos))
+        this.room.visual.circle(this.bestSpot(this.mineral!.pos))
         const f = Game.flags['Home']
         if (!f) {
             this.room.createFlag(25, 25, 'Home', COLOR_BLUE, COLOR_PURPLE);
