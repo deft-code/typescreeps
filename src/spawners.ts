@@ -74,6 +74,10 @@ export class Spawner {
   body(ai: RoomAI): BodyPartConstant[] {
     return []
   }
+
+  toString() {
+    return this.__proto__.constructor.name + ':' + this.name;
+  }
 }
 
 let gSpawners: Spawner[] = []

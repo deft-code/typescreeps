@@ -14,11 +14,15 @@ declare global {
 }
 
 type StructCache = {
-    [P in keyof AllStructureTypes]?: Array<AllStructureTypes[P]>
+    [P in keyof AllStructureTypes]?: Array<AllStructureTypes[P]>;
+} & {
+    rechargable?: EnergyStruct[]
 }
 
 interface AICacheAll {
-    structs?: StructCache
+    structs: StructCache
+    inconts: StructureContainer[]
+    outconts: StructureContainer[]
 }
 
 type AICache = Partial<AICacheAll>
@@ -141,8 +145,33 @@ export class RoomAI extends debug.Debuggable {
 
     get extns() { return this.getStructs(STRUCTURE_EXTENSION) }
 
-
     get roads() { return this.getStructs(STRUCTURE_ROAD) }
+
+    sortConts() {
+        const conts = this.getStructs(STRUCTURE_CONTAINER);
+        this.cache.inconts = _.remove(conts, c => {
+            const src = c.pos.findClosestByRange(FIND_SOURCES);
+            if (src && c.pos.isNearTo(src)) return true;
+            const min = c.pos.findClosestByRange(FIND_MINERALS);
+            if (min && c.pos.isNearTo(min)) return true;
+            return false;
+        });
+        this.cache.outconts = conts;
+    }
+
+    get outconts() {
+        if (!this.cache.outconts) {
+            this.sortConts()
+        }
+        return this.cache.outconts!;
+    }
+
+    get inconts() {
+        if (!this.cache.inconts) {
+            this.sortConts()
+        }
+        return this.cache.inconts!;
+    }
 
 
     lookForAtRange<T extends keyof AllLookAtTypes>(look: T, pos: RoomPosition, range: number): LookForAtAreaResultArray<AllLookAtTypes[T], T> {

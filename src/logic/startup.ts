@@ -10,6 +10,7 @@ export class StartupMission extends MissionLogic {
             this.ensureRole('walker', 0) ||
             this.ensureRole('aphid', 1) ||
             this.ensureRole('aphod', 1) ||
+            this.ensureRole('hauler', 1) ||
             this.ensureWorker()
     }
     ensureWorker() {

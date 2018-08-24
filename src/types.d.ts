@@ -1,3 +1,4 @@
+
 // type shim for nodejs' `require()` syntax
 // for stricter node.js typings, remove this and install `@types/node`
 declare const require: (module: string) => any;
@@ -16,7 +17,6 @@ type AllStructureTypes = {
     spawn: StructureSpawn
     tower: StructureTower
 }
-
 
 interface Structure {
     hurts: number
@@ -37,6 +37,11 @@ interface StructureStorage {
 }
 
 interface StructureTerminal {
+    storeTotal: number
+    storeFree: number
+}
+
+interface Tombstone {
     storeTotal: number
     storeFree: number
 }
@@ -71,3 +76,10 @@ interface StructureTower {
     energyFree: number
 }
 
+type Store = StoreStructure | Tombstone
+
+type Withdrawable = Store | EnergyStruct
+
+interface Tombstone {
+
+}

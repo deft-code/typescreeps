@@ -1,6 +1,7 @@
 import { Role } from "./role";
 import { loop } from "main";
-import { isStoreStructure, isEnergyStructure } from "guards";
+import { isStoreStructure, isEnergyStructure, isStore } from "guards";
+import { PCreep } from "creep";
 
 export class Carry extends Role {
     transfer(s: AnyStructure, r: ResourceConstant) {
@@ -45,14 +46,14 @@ export class Carry extends Role {
         return this.withdraw(_.sample(tombs), RESOURCE_ENERGY) === OK
     }
 
-    *fillEnergyOrdered() {
+    *fillPoolOrdered() {
         return (yield* this.fillTowers(100)) ||
             (yield* this.fillPool()) ||
             (yield* this.fillTowers(400))
     }
 
     *fillTowers(amount: number) {
-        return yield* this.fillEnergy(this.planNear(
+        return yield* this.taskFillEnergyUpTo(this.planNear(
             _.filter(this.mission.ai.towers, t => t.energy < amount)),
             amount)
     }
@@ -61,22 +62,38 @@ export class Carry extends Role {
         if (!this.mission.room) return false
         if (this.mission.room.energyAvailable === this.mission.room.energyCapacityAvailable) return false
         // Fill spawns second to give dedicated fillers time to do their job.
-        return (yield* this.fillEnergy(this.planNear(
+        return (yield* this.taskFillEnergy(this.planNear(
             _.filter(this.mission.ai.extns, e => e.energy < e.energyCapacity)))) ||
-            (yield* this.fillEnergy(this.planNear(
+            (yield* this.taskFillEnergy(this.planNear(
                 _.filter(this.mission.ai.spawns, s => s.energy < s.energyCapacity))))
     }
 
-    *fillEnergy(estruct: EnergyStruct, amount = 0) {
-        if (!estruct) return false
-        while (estruct && (amount === 0 || estruct.energy < amount) && this.carry.energy) {
-            const err = this.o.transfer(estruct, RESOURCE_ENERGY)
-            switch (err) {
-                case ERR_NOT_IN_RANGE: yield this.moveNear(estruct); break
-                case OK: yield "transfer" + estruct.pos.xy; break;
+    *taskFillEnergy(estruct: EnergyStruct) {
+        if (!estruct) return false;
+        return yield* this.taskFillEnergyUpTo(estruct, estruct.energyCapacity)
+    }
 
+    *taskFillEnergyUpTo(estruct: EnergyStruct, max: number) {
+        return yield* this.taskTransfer(estruct, RESOURCE_ENERGY,
+            (e: EnergyStruct) => e.energy < max);
+    }
+
+
+    *taskTransferStore(store: StoreStructure, r: ResourceConstant) {
+        return yield* this.taskTransfer(store, r, (s: StoreStructure) => s.storeFree > 0);
+    }
+
+    *taskTransfer<T extends EnergyStruct | StoreStructure>(struct: T, r: ResourceConstant, cb: (s: T) => boolean) {
+        if (!struct) return false
+        while (this.carry[r] && struct && cb(struct)) {
+            const id = struct.id
+            const err = this.transfer(struct, r)
+            switch (err) {
+                case ERR_NOT_IN_RANGE: yield this.moveNear(struct); break
+                case OK: yield "xfer" + r + struct.pos.xy; break;
                 default: return false
             }
+            struct = Game.getObjectById<T>(id)!;
         }
         return true
     }
@@ -108,7 +125,7 @@ export class Carry extends Role {
 
         let es: any[] = _.filter(room.find(FIND_DROPPED_RESOURCES),
             r => r.resourceType === RESOURCE_ENERGY &&
-                r.amount - this.pos.getRangeTo(r) > limit)
+                r.amount - 2 * this.pos.getRangeTo(r) > limit)
 
         es = es.concat(_.filter(
             room.find(FIND_TOMBSTONES),
@@ -117,25 +134,39 @@ export class Carry extends Role {
         es = es.concat(_.filter(this.mission.ai.containers,
             c => c.store.energy > limit))
 
-        if (this.mission.room.storage) {
+        if (this.mission.room.storage && this.mission.room.storage.store.energy > 0) {
             es.push(this.mission.room.storage)
         }
 
-        if (this.mission.room.terminal) {
+        if (this.mission.room.terminal && this.mission.room.terminal.store.energy > 0) {
             es.push(this.mission.room.terminal)
         }
 
         this.log("energies", es.length, es)
         const e = this.planNear(es)
         if (!e) return false
-        if (e.store || e.energy) {
-            return yield* this.taskWithdraw(e, RESOURCE_ENERGY)
+        if (isEnergyStructure(e)) {
+            return yield* this.taskWithdrawEnergy(e);
         }
-        return yield* this.taskPickup(e)
+        if (isStore(e)) {
+            return yield* this.taskWithdrawStore(e, RESOURCE_ENERGY);
+        }
+        if (e instanceof Resource) {
+            return yield* this.taskPickup(e);
+        }
+        return false;
     }
 
-    *taskWithdraw(struct: AnyStructure | Tombstone | null, r: ResourceConstant) {
-        while (struct && this.carryFree) {
+    *taskWithdrawEnergy(estruct: EnergyStruct) {
+        return yield* this.taskWithdraw(estruct, RESOURCE_ENERGY, e => e.energy > 0);
+    }
+
+    *taskWithdrawStore(store: Store, r: ResourceConstant) {
+        return yield* this.taskWithdraw(store, r, s => !!s.store[r]);
+    }
+
+    *taskWithdraw<T extends Withdrawable>(struct: T | null, r: ResourceConstant, cb: (t: T) => boolean) {
+        while (struct && this.carryFree && cb(struct)) {
             const id = struct.id
             const err = this.withdraw(struct, r)
             if (err === OK) {
@@ -148,6 +179,23 @@ export class Carry extends Role {
         }
         return false
     }
+
+    *taskLoot(struct: Store | null) {
+        while (struct && this.carryFree && struct.storeTotal) {
+            const id = struct.id;
+            const resources = _.clone(struct.store);
+            if (!resources.energy) delete resources.energy;
+            const rs = _.keys(resources) as ResourceConstant[]
+            if (rs.length < 2) {
+                return yield* this.taskWithdrawStore(struct, rs[0]);
+            }
+            if (!(yield* this.taskWithdrawStore(struct, _.sample(rs)))) {
+                return false
+            }
+            struct = Game.getObjectById<Store>(id);
+        }
+    }
+
 
     *taskPickup(r: Resource | null) {
         while (r && this.carryFree) {

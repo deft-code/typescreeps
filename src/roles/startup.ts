@@ -36,7 +36,7 @@ class Startup extends Work {
                 yield* this.rechargeHarvest()
             } else {
                 (yield* this.upgradeAll(1500)) ||
-                    (yield* this.fillEnergyOrdered()) ||
+                    (yield* this.fillPoolOrdered()) ||
                     (yield* this.buildOrdered()) ||
                     (yield* this.upgradeAll())
             }
