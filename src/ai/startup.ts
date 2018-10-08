@@ -3,9 +3,10 @@ import { defaultRewalker } from 'Rewalker';
 import { joinSpawning } from 'spawners';
 import * as debug from 'debug';
 
-function one(towers: StructureTower[], func: any, obj: Creep | AnyStructure | undefined) {
+function one(towers: StructureTower[], func: any, obj: Creep | AnyStructure | undefined): StructureTower[] {
     if (!obj) return towers
-    const tower = obj.pos.findClosestByRange(towers)
+    if (!towers.length) return towers
+    const tower = obj.pos.findClosestByRange(towers)!
     const err = func.call(tower, obj)
     if (err !== OK) debug.log(`${tower.pos} Bad tower ${err}: ${tower}, ${obj}`)
     return _.filter(towers, t => t.id !== tower.id)
@@ -88,7 +89,7 @@ export class StartupAI extends RoomAI {
         const min = _.min(repair, r => r.hits).hits
         repair = _.filter(repair, r => r.hits < min + CONTAINER_HITS)
         for (const tower of towers) {
-            tower.repair(tower.pos.findClosestByRange(repair))
+            tower.repair(tower.pos.findClosestByRange(repair)!)
         }
     }
 

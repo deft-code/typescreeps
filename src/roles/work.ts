@@ -102,6 +102,7 @@ export class Work extends Carry {
             yield 'again'
             s = Game.getObjectById<AnyStructure>(id)!;
         }
+        return true;
     }
 
     idleBuildRepair() {

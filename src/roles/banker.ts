@@ -9,6 +9,10 @@ class BankerSpawner extends StaticLocalSpawner {
     }
 }
 
+
+const fullE = TERMINAL_CAPACITY/3
+const deltaE = TERMINAL_CAPACITY/20
+const minE = TERMINAL_CAPACITY/100
 @Role.register
 class Banker extends Carry {
     static spawner(name: string) {
@@ -23,35 +27,37 @@ class Banker extends Carry {
         }
 
         yield* this.taskMoveTarget({ pos: spot }, 0);
-        const t = _.min(this.nearStructs.get(STRUCTURE_TOWER).filter(t => t.energyFree >= 200), t => t.energy);
+        const t = _.sample(this.nearStructs.get(STRUCTURE_TOWER).filter(t => t.energyFree >= 200))
         if (t) {
             yield* this.taskGetEnergy();
             this.transfer(t, RESOURCE_ENERGY);
-            yield 'transfer';
+            yield 'transfer tower';
         }
 
         const spawn = _.find(this.nearStructs.get(STRUCTURE_SPAWN), s => s.energyFree > 0);
         if (spawn) {
             yield* this.taskGetEnergy();
             this.transfer(spawn, RESOURCE_ENERGY);
-            yield 'transfer';
+            yield 'transfer spawn';
         }
 
         const term = _.first(this.nearStructs.get(STRUCTURE_TERMINAL));
         const store = _.first(this.nearStructs.get(STRUCTURE_STORAGE));
         if (store && term) {
-            if (term.store.energy < 10000) {
-                if (!this.carry.energy) {
-                    yield* this.taskGetEnergy(false);
-                    yield "getenergy";
+            const te = term.store.energy;
+            const se = store.store.energy/10;
+            const delta = se - te
+            if (te < fullE && term.storeFree > minE) {
+                // this.log("delta:", delta)
+                if (delta > deltaE || te < deltaE) {
+                    if (!this.carry.energy) {
+                        yield* this.taskGetEnergy(false);
+                    }
+                    this.transfer(term, RESOURCE_ENERGY);
+                    yield 'transfer' + this.carry.energy;
                 }
-                this.transfer(term, RESOURCE_ENERGY);
-                yield 'transfer';
-                return true;
             }
         }
-
-        return true;
     }
 
     *taskGetEnergy(terminal = true, store = true) {

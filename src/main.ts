@@ -23,7 +23,6 @@ const when = Game.time % 10
 declare const require: {timestamp: number}
 
 export function loop() {
-  //debug.log('version 1', when, require.timestamp % 10)
   initCache()
   clearCache()
 

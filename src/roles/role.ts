@@ -91,16 +91,27 @@ export class Role extends PCreep {
             }
         }
         if (this.pre()) return
+        let newLoop = false
         if (!this._loop) {
+            newLoop = true
             this._loop = this.loop();
         }
         let ret = this._loop.next()
+        let twice = false;
         if (ret.value === 'again') {
+            twice = true;
             ret = this._loop.next();
         }
         if (ret.done) {
-            delete this._loop;
+            this._loop = this.loop();
+            if(!newLoop) {
+            ret = this._loop.next();
+            if(ret.value === 'again' && !twice) {
+                ret = this._loop.next();
+            }
         }
+        }
+        this.dlog("ran", ret.value)
     }
 
     * loop(): IterableIterator<string | boolean> { }

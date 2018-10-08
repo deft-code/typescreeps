@@ -45,6 +45,7 @@ export class Debuggable {
     }
 
     set debug(value: boolean | number) {
+        this.log("set debug", value)
         if (!value) {
             delete this._debug;
         }

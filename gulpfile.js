@@ -60,6 +60,11 @@ gulp.task('copyLocalPlus', ['flatten'], function() {
     .pipe(gulp.dest("/home/nickte/.config/Screeps/scripts/server1_screepspl_us___21025/default"))
 });
 
+gulp.task('copyWinPlus', ['flatten'], function() {
+  return gulp.src('dist/*')
+    .pipe(gulp.dest("/mnt/c/Users/Nick/AppData/Local/Screeps/scripts/server1_screepspl_us___21025/default"))
+});
+
 gulp.task('watchUpload', function () {
   gulp.watch('src/**/*.ts', gulp.series('upload'))
     .on('all', function(event, path, stats) {
