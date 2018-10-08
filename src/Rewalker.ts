@@ -1,7 +1,3 @@
-import { tokTypes } from "acorn";
-
-
-
 let _whoami = ""
 export function whoami(): string {
     if (_whoami.length === 0) {
@@ -164,10 +160,10 @@ export function calcWeight(c: Creep): [number, number] {
     return [weight, nmoves]
 }
 
-export function hasActivePart(c:Creep, ...partTypes: BodyPartConstant[]): boolean {
-    for(let i = c.body.length-1; i>=0; i--) {
-        if(c.body[i].hits <= 0) return false
-        if(_.includes(partTypes, c.body[i].type)) return true
+export function hasActivePart(c: Creep, ...partTypes: BodyPartConstant[]): boolean {
+    for (let i = c.body.length - 1; i >= 0; i--) {
+        if (c.body[i].hits <= 0) return false
+        if (_.includes(partTypes, c.body[i].type)) return true
     }
     return false
 }
@@ -291,31 +287,31 @@ export function drawGoal(pos: RoomPosition, color: string, goal: Goal) {
 
 export function cleanGoal(goal: Goal): Goal {
     if (goal.range <= 1 || goal.range > 24) return goal
-    const l = (goal.range - goal.pos.x) - 1
-    if (l > 0) {
-        const pl = Math.floor(l / 2)
-        const rl = l - pl
+    const left = (goal.range - goal.pos.x) - 1
+    if (left > 0) {
+        const pl = Math.floor(left / 2)
+        const rl = left - pl
         goal.pos.x += pl
         goal.range -= rl
     }
-    const r = (goal.range - (49 - goal.pos.x)) - 1
-    if (r > 0) {
-        const pr = Math.floor(r / 2)
-        const rr = r - pr
+    const right = (goal.range - (49 - goal.pos.x)) - 1
+    if (right > 0) {
+        const pr = Math.floor(right / 2)
+        const rr = right - pr
         goal.pos.x -= pr
         goal.range -= rr
     }
-    const t = (goal.range - goal.pos.y) - 1
-    if (t > 0) {
-        const pt = Math.floor(t / 2)
-        const rt = t - pt
+    const top = (goal.range - goal.pos.y) - 1
+    if (top > 0) {
+        const pt = Math.floor(top / 2)
+        const rt = top - pt
         goal.pos.y += pt
         goal.range -= rt
     }
-    const b = (goal.range - (49 - goal.pos.y)) - 1
-    if (b > 0) {
-        const pb = Math.floor(b / 2)
-        const rb = b - pb
+    const bottom = (goal.range - (49 - goal.pos.y)) - 1
+    if (bottom > 0) {
+        const pb = Math.floor(bottom / 2)
+        const rb = bottom - pb
         goal.pos.y -= pb
         goal.range -= rb
     }
@@ -359,8 +355,8 @@ const ROUTE_HOSTILE_CLAIMED = 10
 
 let _rewalker: Rewalker | null = null
 export function defaultRewalker() {
-    if(!_rewalker) {
-    _rewalker = new Rewalker()
+    if (!_rewalker) {
+        _rewalker = new Rewalker()
     }
     return _rewalker
 }
@@ -399,7 +395,7 @@ export class Rewalker {
 
     getStuckTicks(creep: Creep): number {
         const info = this._getRoomInfo(creep.pos.roomName)
-        if(!info) return 0
+        if (!info) return 0
         const cinfo = info.creeps.get(creep.id)
         if (!cinfo) return 0
         return cinfo.ticks
@@ -422,7 +418,7 @@ export class Rewalker {
         let mat = cache.get(roomName)
         if (!mat) {
             const info = this._getRoomInfo(roomName)
-            if(!info) {
+            if (!info) {
                 mat = RoomInfo._null
             } else {
                 mat = info.newMatrix(roomName, this)
@@ -507,8 +503,8 @@ export class Rewalker {
 
     calcRoomCost(room: Room): [number, number] {
         const cost = this._calcRoomCost(room)
-        if(this._checkMurder(room)) {
-            return [cost+20, 2000]
+        if (this._checkMurder(room)) {
+            return [cost + 20, 2000]
         }
         return [cost, TOMBSTONE_DECAY_PER_PART * 25]
     }
@@ -559,15 +555,15 @@ export class Rewalker {
     _getRoomInfo(roomName: string): RoomInfo | null {
         let info = this._infos.get(roomName)
         const room = Game.rooms[roomName]
-        if(!info) {
-            if(!room) return null
+        if (!info) {
+            if (!room) return null
 
             info = new RoomInfo()
             info.update(room, this)
             this._infos.set(roomName, info)
             return info
         }
-        if(room) {
+        if (room) {
             info.update(room, this)
         }
         return info
@@ -635,9 +631,9 @@ export class Rewalker {
         return [entry.route, flip]
     }
 
-    _getRoomCost(roomName: string): number{
+    _getRoomCost(roomName: string): number {
         const info = this._getRoomInfo(roomName)
-        if(info) return info.cost
+        if (info) return info.cost
         return this.guessRoomCost(roomName)
     }
 
@@ -645,7 +641,7 @@ export class Rewalker {
         return (roomName: string, from: string) => this._getRoomCost(roomName)
     }
 
-    get roomCallback() : (roomName: string) => boolean | CostMatrix {
+    get roomCallback(): (roomName: string) => boolean | CostMatrix {
         return roomName => this.getMatrix(roomName)
     }
 
@@ -704,9 +700,9 @@ class Step {
         this.store()
         const stuck = this.rewalker.getStuckTicks(this.creep)
         if (stuck > 0) {
-            const blocker = _.first(this.path.first.lookFor(LOOK_CREEPS))
-            if (blocker && blocker.my) {
-                blocker.move(getDirectionTo(blocker.pos, this.creep.pos) as DirectionConstant)
+            const next = this.path.first;
+            if (next.roomName === this.creep.pos.roomName) {
+                this.bump(_.first(this.path.first.lookFor(LOOK_CREEPS)));
             }
         }
         const dir = getDirectionTo(this.creep.pos, this.path.first)
@@ -715,6 +711,39 @@ class Step {
             return dir
         }
         return err
+    }
+
+    bump(blocker: Creep) {
+        if (!blocker) return;
+        if (!blocker.my) return;
+        if (blocker.fatigue > 0) return;
+        const dirs = [blocker.pos.getDirectionTo(this.creep.pos)];
+        for (let dx = -1; dx <= 1; dx++) {
+            const x = blocker.pos.x + dx;
+            if (x <= 0 || x >= 49) continue;
+            for (let dy = -1; dy <= 1; dy++) {
+                if (dx === 0 && dy === 0) continue
+                const y = blocker.pos.y + dy;
+                if (y === this.creep.pos.y && x === this.creep.pos.x) continue;
+                if (y <= 0 || y >= 49) continue;
+                if (Game.map.getTerrainAt(x, y, this.creep.pos.roomName) === 'wall') continue;
+                const p = new RoomPosition(x, y, blocker.pos.roomName);
+                const d = blocker.pos.getDirectionTo(p);
+                if (p.lookFor(LOOK_CREEPS).length > 0) continue;
+
+                const sites = p.lookFor(LOOK_CONSTRUCTION_SITES);
+                if (_.any(sites, s => s.my && _.contains(OBSTACLE_OBJECT_TYPES, s.structureType))) continue;
+
+                const structs = p.lookFor(LOOK_STRUCTURES);
+                if (_.any(structs, s =>
+                    (s.structureType === STRUCTURE_RAMPART && !(<StructureRampart>s).my) ||
+                    _.contains(OBSTACLE_OBJECT_TYPES, s.structureType))) continue;
+
+                dirs.push(d);
+            }
+        }
+        const dir = _.sample(dirs);
+        blocker.move(dir);
     }
 
     inDanger(pos: RoomPosition): number {
@@ -769,7 +798,7 @@ class Step {
             // Fallthrough to allow other move conditions to check position
         }
 
-        console.log("move again", this.creep.pos, this.path.first, this.path.second)
+        //console.log("move again", this.creep.pos, this.path.first, this.path.second)
         // Either moved successfully or got bumped closer
         if (this.creep.pos.isEqualTo(this.path.first) || this.creep.pos.isNearTo(this.path.second)) {
             if (this.path.done) {
@@ -849,6 +878,23 @@ class Step {
             swampCost = 1
         }
 
+        const destRoom = goals[0].pos.roomName;
+        const lDist = Game.map.getRoomLinearDistance(pos.roomName, destRoom);
+        if (lDist > 4 || this.rewalker.getRouteDist(pos.roomName, destRoom) > 4) {
+            let waypoint = destRoom;
+            let range = 23;
+            if(lDist > 10) {
+                range =  2 + 50 * (lDist - 3);
+            } else {
+                const route = this.rewalker.getRoute(pos.roomName, destRoom);
+                waypoint = route[4];
+            }
+            goals = [{
+                pos: new RoomPosition(25, 25, waypoint),
+                range,
+            }];
+        }
+
         const ret = PathFinder.search(
             pos,
             goals,
@@ -860,9 +906,9 @@ class Step {
             })
 
         const color = ret.incomplete ? 'red' : 'cornflowerblue'
-        if(ret.path.length < 1) {
-            for(let i =0; i< goals.length; i++) {
-                if(this.creep.pos.inRangeTo(goals[i].pos, goals[i].range)) {
+        if (ret.path.length < 1) {
+            for (let i = 0; i < goals.length; i++) {
+                if (this.creep.pos.inRangeTo(goals[i].pos, goals[i].range)) {
                     drawGoal(this.creep.pos, color, goals[i])
                     return [i, new Path([this.creep.pos])]
                 }

@@ -5,6 +5,7 @@ import { Dictionary } from 'lodash';
 import { fromXY } from 'Rewalker';
 import { PSource, PMineral, PController } from 'perma';
 import { getCache } from 'cache';
+import { StructIndex } from 'structcache';
 
 
 declare global {
@@ -28,8 +29,10 @@ interface AICacheAll {
 type AICache = Partial<AICacheAll>
 
 export class RoomAI extends debug.Debuggable {
+    index: StructIndex
     constructor(public readonly name: string) {
-        super()
+        super();
+        this.index = new StructIndex(name);
     }
 
     get room(): Room {
@@ -85,70 +88,38 @@ export class RoomAI extends debug.Debuggable {
         return getCache<AICache>(this.name)
     }
 
-    _structIds: {
-        [type: string]: string[]
-    }
-    _numStructs = 0
-    get structIds() {
-        if (!this.room) return this._structIds
-        const nstructs = this.room.find(FIND_STRUCTURES).length
-        if (nstructs !== this._numStructs) {
-            this.buildStructIds()
-        }
-        return this._structIds
-    }
+    get towers() { return this.index.get(STRUCTURE_TOWER) }
 
-    buildStructIds() {
-        const structs = this.room.find(FIND_STRUCTURES)
-        this._numStructs = structs.length
-        this._structIds = _.mapValues(
-            _.groupBy(structs, s => s.structureType),
-            ss => ss.map(s => s.id))
-    }
-
-    makeStructs<SType extends keyof AllStructureTypes>(stype: SType): Array<AllStructureTypes[SType]> {
-        type SClass = AllStructureTypes[SType]
-        const ids = this.structIds[stype]
-        if (!ids) return []
-        let rebuild = false
-        let structs = ids.map(id => {
-            const struct = Game.getObjectById<SClass>(id)!
-            if (struct === null) rebuild = true
-            return struct
-        })
-        if (rebuild) {
-            this.buildStructIds()
-            return this.makeStructs(stype)
-        }
-        return structs
-    }
-
-    getStructs<SType extends keyof AllStructureTypes>(stype: SType): AllStructureTypes[SType][] {
-        if (!this.cache.structs) {
-            this.cache.structs = {}
-        }
-        let structs = this.cache.structs
-        if (!structs[stype]) {
-            (<AllStructureTypes[SType][]>this.cache.structs[stype]) = this.makeStructs(stype)
-            //this.cache.structs[stype] = this.makeStructs(stype) as StructCache[SType][]
-
-        }
-        return structs[stype]!
-    }
-
-    get towers() { return this.getStructs(STRUCTURE_TOWER) }
-
-    get spawns() { return this.getStructs(STRUCTURE_SPAWN) }
+    get spawns() { return this.index.get(STRUCTURE_SPAWN) }
     get myspawns() { return this.spawns.filter(s => s.my) }
 
-    get containers() { return this.getStructs(STRUCTURE_CONTAINER) }
+    get containers() { return this.index.get(STRUCTURE_CONTAINER) }
 
-    get extns() { return this.getStructs(STRUCTURE_EXTENSION) }
+    get extns() { return this.index.get(STRUCTURE_EXTENSION) }
 
-    get roads() { return this.getStructs(STRUCTURE_ROAD) }
+    get roads() { return this.index.get(STRUCTURE_ROAD) }
+
+    get repairs() {
+        if (!this.room) return []
+        return this.room.find(FIND_STRUCTURES, {
+            filter: (s: AnyStructure) => {
+                switch (s.structureType) {
+                    case STRUCTURE_RAMPART:
+                    case STRUCTURE_WALL:
+                        return s.hits < this.maxHits(s);
+                    case STRUCTURE_CONTAINER:
+                        return s.hurts > 100000;
+                    case STRUCTURE_ROAD:
+                        return s.hurts > 2000;
+                    default:
+                        return s.hits < s.hitsMax;
+                }
+            }
+        });
+    }
 
     sortConts() {
-        const conts = this.getStructs(STRUCTURE_CONTAINER);
+        const conts = this.index.get(STRUCTURE_CONTAINER);
         this.cache.inconts = _.remove(conts, c => {
             const src = c.pos.findClosestByRange(FIND_SOURCES);
             if (src && c.pos.isNearTo(src)) return true;
@@ -199,7 +170,7 @@ export class RoomAI extends debug.Debuggable {
         return bestSpot
     }
 
-    maxHits(wall: Structure) {
+    maxHits(wall: AnyStructure) {
         if (wall.structureType !== STRUCTURE_WALL && wall.structureType !== STRUCTURE_RAMPART) return wall.hitsMax
         if (!wall.room.controller) return wall.hitsMax
         if (!wall.room.controller.my) return wall.hitsMax

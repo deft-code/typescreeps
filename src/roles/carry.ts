@@ -1,9 +1,8 @@
-import { Role } from "./role";
-import { loop } from "main";
 import { isStoreStructure, isEnergyStructure, isStore } from "guards";
 import { PCreep } from "creep";
+import { Move } from "./move";
 
-export class Carry extends Role {
+export class Carry extends Move {
     transfer(s: AnyStructure, r: ResourceConstant) {
         const err = this.o.transfer(s, r)
         if (err === OK) this._intents.transfer = true
@@ -14,6 +13,12 @@ export class Carry extends Role {
         const err = this.o.withdraw(s, r)
         if (err === OK) this._intents.withdraw = true
         return err
+    }
+
+    drop(resource: ResourceConstant) {
+        const err = this.o.drop(resource);
+        if (err === OK) this._intents.drop = true;
+        return err;
     }
 
     pickup(resource: Resource) {
@@ -93,6 +98,7 @@ export class Carry extends Role {
                 case OK: yield "xfer" + r + struct.pos.xy; break;
                 default: return false
             }
+            yield 'again'
             struct = Game.getObjectById<T>(id)!;
         }
         return true
@@ -102,10 +108,8 @@ export class Carry extends Role {
         if (this.carryFree < this.carry.energy) return false
         if (this._intents.withdraw) return false
 
-        const spots = _.shuffle(this.ai.lookForAtRange(LOOK_STRUCTURES, this.pos, 1))
-
-        for (let spot of spots) {
-            const s = spot.structure
+        const structs = _.shuffle(this.nearStructs.all)
+        for (let s of structs) {
             if (s.structureType === STRUCTURE_SPAWN) continue
             if (s.structureType === STRUCTURE_EXTENSION) continue
             if (s.structureType === STRUCTURE_TOWER) continue
@@ -141,6 +145,9 @@ export class Carry extends Role {
         if (this.mission.room.terminal && this.mission.room.terminal.store.energy > 0) {
             es.push(this.mission.room.terminal)
         }
+
+        es = es.concat(_.filter(this.mission.ai.index.get(STRUCTURE_LINK),
+            l => l.energy > limit));
 
         this.log("energies", es.length, es)
         const e = this.planNear(es)

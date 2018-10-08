@@ -11,6 +11,7 @@ import { findAI } from 'ai/allai';
 import { RoomAI } from 'ai/ai';
 import { run as spawnersRun } from 'spawners';
 import { initCache } from 'cache';
+import { clearCache } from 'structcache';
 
 declare global {
   function findAI(room: string): RoomAI;
@@ -22,8 +23,9 @@ const when = Game.time % 10
 declare const require: {timestamp: number}
 
 export function loop() {
-  debug.log('version 1', when, require.timestamp % 10)
+  //debug.log('version 1', when, require.timestamp % 10)
   initCache()
+  clearCache()
 
   const ais = _.map(Game.rooms, r => r.ai);
   shed.run(ais, 500, ai => ai.init());
@@ -52,4 +54,5 @@ export function loop() {
   shed.run(logic, 9000, team => team.darkRun());
 
   initCache()
+  clearCache()
 }

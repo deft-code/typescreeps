@@ -50,7 +50,8 @@ export class Spawner {
   }
 
   get mission() {
-    const mname = Role.calcMission(this.name)
+    const mname = Role.calcMission(this.name);
+    //log("spawner mission", this.name, mname);
     return Game.flags[mname].logic as MissionLogic
   }
 
@@ -76,7 +77,7 @@ export class Spawner {
   }
 
   toString() {
-    return this.__proto__.constructor.name + ':' + this.name;
+    return (<any>this).__proto__.constructor.name + ':' + this.name;
   }
 }
 
@@ -94,7 +95,7 @@ export function run() {
       const err = spawner.spawn(avoid)
       log("spawning", spawner)
       if (err === OK) {
-        avoid.add(spawner.mission.ai.name)
+        avoid.add(spawner.mission.flag.pos.roomName)
         continue
       }
       if (err !== ERR_NAME_EXISTS) {
@@ -149,6 +150,19 @@ export class CloseSpawner extends Spawner {
     return _.filter(gAis, ai =>
       rewalker.getRouteDist(ai.name, this.mission.ai.name) <= mdist + 1)
   }
+}
+
+export class StaticCloseSpawner extends CloseSpawner {
+  constructor(name:string, public readonly parts: BodyPartConstant[]) {
+    super(name);
+  }
+  energyAIs(ais: RoomAI[]) {
+    return this.fullAIs(ais);
+  }
+  body(ai: RoomAI) {
+    return this.parts;
+  }
+
 }
 
 export class DynamicCloseSpawner extends CloseSpawner {

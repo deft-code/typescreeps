@@ -9,18 +9,18 @@ class Worker extends Work {
     }
 
     *loop(): IterableIterator<string | boolean> {
-        while (true) {
-            if (!this.carry.energy) {
-                yield* this.rechargeHarvest()
-            } else {
-                (yield* this.buildOrdered()) ||
-                    (yield* this.upgradeAll())
-            }
+        if (!this.carry.energy) {
+            yield* this.rechargeHarvest()
+        } else {
+            (yield* this.buildOrdered()) ||
+            (yield* this.taskRepairOrdered()) ||
+                (yield* this.upgradeAll());
         }
     }
 
     after() {
-        if (this.idleNom() || this.carryFree < this.carryTotal) {
+        const e = this.idleNom() || this.idleRecharge()
+        if (e || this.carryFree < this.carryTotal) {
             this.idleBuildRepair()
         }
     }

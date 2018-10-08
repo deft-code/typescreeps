@@ -1,5 +1,6 @@
 import { Perma } from 'perma'
 import * as debug from 'debug'
+import { CreepIndex } from 'structcache';
 
 const allies = ['HailHydra']
 
@@ -9,6 +10,7 @@ export class PCreep extends Perma<Creep> {
 
     readonly partsByType: Record<BodyPartConstant, number>
     readonly fullInfo: Record<string, number>
+    readonly nearStructs: CreepIndex;
 
     constructor(creep: Creep) {
         super(creep);
@@ -17,6 +19,7 @@ export class PCreep extends Perma<Creep> {
             .value() as Record<BodyPartConstant, number>
         this.fullInfo = this.bodyInfo(false);
         this._updateHits()
+        this.nearStructs = new CreepIndex(creep.id, 1);
     }
 
     get room() { return this.o.room }

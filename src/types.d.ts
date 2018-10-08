@@ -16,6 +16,8 @@ type AllStructureTypes = {
     road: StructureRoad
     spawn: StructureSpawn
     tower: StructureTower
+    lab: StructureLab
+    link: StructureLink
 }
 
 interface Structure {

@@ -3,8 +3,8 @@ import { Carry } from "./carry";
 import { DynamicLocalSpawner } from "spawners";
 import { RoomAI } from "ai/ai";
 import { buildBody } from "body";
-import { loop } from "main";
 import { isEnergyStructure } from "guards";
+import { pickNonEnergy } from "lib";
 
 class HaulerSpawner extends DynamicLocalSpawner {
     energyAIs(ais: RoomAI[]) {
@@ -12,7 +12,7 @@ class HaulerSpawner extends DynamicLocalSpawner {
     }
     body(ai: RoomAI) {
         const mn = 800;
-        const mx = 2600;
+        const mx = 1500;
         const e = ai.room!.energyAvailable;
         return buildBody(this.parts, Math.min(mx, Math.max(e, mn)), 2);
     }
@@ -88,9 +88,13 @@ class Hauler extends Carry {
 
     planNeedFill(): EnergyStruct | StoreStructure | null {
         // TODO plan other energy structs.
-        const outs = _.filter(this.mission.ai.outconts,
-            c => c.store.energy < 0.75 * c.storeCapacity && c.storeFree > 100);
-        return this.planNear(outs);
+        let ret: Array<EnergyStruct | StoreStructure> = [];
+        ret.concat(_.filter(this.mission.ai.outconts,
+            c => c.store.energy < 0.75 * c.storeCapacity && c.storeFree > 100));
+        ret.concat(_.filter(this.mission.ai.index.get(STRUCTURE_LAB),
+            l => l.energyFree > 0));
+
+        return this.planNear(ret);
     }
 
     *taskShuttleEnergy() {
@@ -115,13 +119,33 @@ class Hauler extends Carry {
     }
 
     *taskDepositMinerals() {
-        // into mineral cont or drop
-        return false
+        if (this.carryTotal <= this.carry.energy) return false;
+        if (!this.mission.room) return false;
+
+        let t = this.mission.room.terminal;
+        if (!t || !t.storeFree) {
+            let r = pickNonEnergy(this.carry);
+            while (r) {
+                if (this.drop(r) !== OK) return false;
+                yield 'drop' + r;
+                r = pickNonEnergy(this.carry);
+            }
+            return true;
+        }
+
+        let r = pickNonEnergy(this.carry);
+        while (r && t.storeFree) {
+            const id: string = t.id;
+            yield* this.taskTransferStore(t, r);
+            yield 'again';
+            r = pickNonEnergy(this.carry);
+            t = Game.getObjectById<StructureTerminal>(id)!;
+        }
+        return true;
     }
 
-    *taskDeposit() {
+    * taskDeposit() {
         // into term < 250 or storage
         return false
     }
-
 }

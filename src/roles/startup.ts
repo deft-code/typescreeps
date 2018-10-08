@@ -31,19 +31,21 @@ class Startup extends Work {
         return new StartupSpawner(name, [CARRY, WORK, WORK, WORK])
     }
     *loop(): IterableIterator<string | boolean> {
-        while (true) {
-            if (!this.carry.energy) {
-                yield* this.rechargeHarvest()
-            } else {
-                (yield* this.upgradeAll(1500)) ||
-                    (yield* this.fillPoolOrdered()) ||
-                    (yield* this.buildOrdered()) ||
-                    (yield* this.upgradeAll())
-            }
+        if (!this.carry.energy) {
+            yield* this.rechargeHarvest()
+        } else {
+            (yield* this.upgradeAll(1500)) ||
+                (yield* this.fillPoolOrdered()) ||
+                (yield* this.buildOrdered()) ||
+                (yield* this.upgradeAll())
         }
     }
 
     after() {
+        if (this.carry.energy) {
+            const spawn = _.find(this.nearStructs.get(STRUCTURE_SPAWN) as StructureSpawn[], s => s.energyFree);
+            this.transfer(spawn!, RESOURCE_ENERGY);
+        }
         this.idleNom()
     }
 }

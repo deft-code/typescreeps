@@ -8,8 +8,16 @@ import { errStr } from "debug";
 import { buildBody } from "body";
 
 class AphidSpawner extends DynamicLocalSpawner {
+    energyAIs(ais: RoomAI[]) {
+        return ais.filter(ai => {
+            const e = ai.room!.energyAvailable;
+            const c = ai.room!.energyCapacityAvailable;
+            if(c > 800) return e > 800;
+            return e >= c;
+        });
+    }
     body(ai: RoomAI) {
-        return buildBody([WORK], Math.min(800, ai.room!.energyAvailable), 8/3, [CARRY]);
+        return buildBody([WORK], Math.min(800, ai.room!.energyAvailable), 8 / 3, [CARRY]);
     }
 }
 
@@ -22,7 +30,8 @@ export class Aphid extends Work {
     *loop(): IterableIterator<string | boolean> {
         yield* this.taskMissionVisible()
         const src = this.getSource()
-        yield* this.taskHarvestByStore(src)
+        yield* this.taskHarvestByStore(src, STRUCTURE_STORAGE);
+        yield* this.taskHarvestByStore(src, STRUCTURE_LINK);
         yield* this.taskHarvestByCont(src)
         yield* this.taskHarvestBySite(src)
 
@@ -37,20 +46,25 @@ export class Aphid extends Work {
     }
 
     fillUp(store: StoreStructure) {
-        if(this.idleNom()) return 'nom'
-        if(this.carry.energy < this.o.getActiveBodyparts(WORK)) {
-            if(this.withdraw(store, RESOURCE_ENERGY) === OK) return 'withdraw'
+        if (this.idleNom()) return 'nom'
+        if (this.carry.energy < this.o.getActiveBodyparts(WORK)) {
+            if (this.withdraw(store, RESOURCE_ENERGY) === OK) return 'withdraw'
         }
         return 'idle'
     }
 
-    *taskHarvestByStore(src: PSource) {
-        let store = this.mission.room.storage
-        if (!store || !src.spot.isNearTo(store)) return false
-        yield * this.taskMoveRange(src)
+    *taskHarvestByStore(src: PSource, stype: StructureConstant) {
+        let store = _.find(this.ai.index.get(stype) as StoreStructure[], s => src.spot.isNearTo(s));
+        if(!store) return false;
+
+        const cont = _.find(src.spot.lookFor(LOOK_STRUCTURES), s => s.structureType === STRUCTURE_CONTAINER) as StructureContainer | undefined;
+        if (cont && cont.storeTotal === 0) cont.destroy();
+
+        yield* this.taskMoveRange(src)
         while (store) {
             const id: string = store.id
             this.moveTarget({ pos: src.spot }, 0)
+
             // TODO use generic creep power
             const power = HARVEST_POWER * this.o.getActiveBodyparts(WORK)
             // Only transfer when actively harvesting
@@ -64,6 +78,10 @@ export class Aphid extends Work {
                 case ERR_NOT_ENOUGH_RESOURCES: yield this.fillUp(store); break
                 default: return false
             }
+            if (this.carry.energy) {
+                const spawn = _.find(this.nearStructs.get(STRUCTURE_SPAWN) as StructureSpawn[], s => s.energyFree);
+                this.transfer(spawn!, RESOURCE_ENERGY);
+            }
             store = Game.getObjectById(id) as StructureStorage | undefined
         }
         return true
@@ -71,7 +89,7 @@ export class Aphid extends Work {
 
     * taskHarvestByCont(src: PSource) {
         const look = _.find(this.mission.ai.lookForAtRange(LOOK_STRUCTURES, src.pos, 1),
-            s => (<AnyStructure>s[LOOK_STRUCTURES]).structureType === STRUCTURE_CONTAINER)
+            s => s.structure.structureType === STRUCTURE_CONTAINER)
         if (!look) return false
         let cont = look[LOOK_STRUCTURES] as StructureContainer | null
         while (cont) {
@@ -123,6 +141,7 @@ export class Aphid extends Work {
     }
 
     after() {
+        this.idleNom()
         this.idleBuildRepair()
     }
 

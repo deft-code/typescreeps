@@ -96,9 +96,7 @@ export class StartupAI extends RoomAI {
     run() {
         super.run()
         this.runTowers()
-        joinSpawning(this)
-        const p = new RoomPosition(4, 26, 'E3S1');
-        console.log("tower", p, p.createConstructionSite(STRUCTURE_TOWER));
+        joinSpawning(this);
         // const bests = _.map(this.sources, s => this.bestSpot(s.pos)).forEach(b => {
         //     this.room.visual.circle(b)
         // })
@@ -113,6 +111,10 @@ export class StartupAI extends RoomAI {
             this.room.createFlag(25, 25, 'Home', COLOR_BLUE, COLOR_PURPLE);
             return
         }
+        const core = this.getSpot('core');
+        if(core) {
+            this.room.visual.circle(core);
+        }
         // const mat = defaultRewalker().getMatrix(this.name)
         // const vis = this.room.visual
 
@@ -123,5 +125,21 @@ export class StartupAI extends RoomAI {
         //         vis.text(w.toString(16), x, y)
         //     }
         // }
+    }
+
+    after() {
+        super.after();
+        const links = this.index.get(STRUCTURE_LINK);
+        for(const outlink of links) {
+            if(outlink.cooldown> 0) continue;
+            if(outlink.energy < outlink.energyFree) continue;
+
+            const inlink = _.find(_.shuffle(links), l => outlink.id !== l.id && outlink.energy - l.energy > 100);
+            if(!inlink) continue;
+
+            const de = outlink.energy - inlink.energy;
+
+            outlink.transferEnergy(inlink, de/2);
+        }
     }
 }

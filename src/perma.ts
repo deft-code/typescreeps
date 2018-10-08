@@ -59,10 +59,10 @@ export class Perma<Orig extends Wrapped> extends debug.Debuggable {
         return toXY(this.pos)
     }
 
-    get room() { return this.o.room }
+    get room() { return Game.rooms[this.pos.roomName] }
 
     get ai() {
-        const room = this.o.room
+        const room = this.room
         if (room) return room.ai
         return findAI(this.pos.roomName)
     }
