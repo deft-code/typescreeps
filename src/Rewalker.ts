@@ -106,17 +106,18 @@ export function matrixDeserialize(data: Array<number>): CostMatrix {
 }
 
 export function matrixAvoid(mat: CostMatrix, pos: RoomPosition, range: number) {
+    const t = Game.map.getRoomTerrain(pos.roomName);
     for (let dx = -range; dx <= range; dx++) {
         for (let dy = -range; dy <= range; dy++) {
             const [x, y] = [pos.x + dx, pos.y + dy]
             if (x < 0 || y < 0) continue
             if (x > 49 || y > 49) continue
-            const terrain = Game.map.getTerrainAt(x, y, pos.roomName)
-            if (terrain === 'wall') continue
+            const tile = t.get(x, y);
+            if (tile === TERRAIN_MASK_WALL) continue
             if (_.find(pos.lookFor(LOOK_STRUCTURES) as StructureRampart[],
                 s => s.structureType === STRUCTURE_RAMPART && s.my)) continue
             let w = mat.get(x, y)
-            if (w === 0) w = (terrain === 'swamp' ? 10 : 2)
+            if (w === 0) w = (tile === TERRAIN_MASK_SWAMP ? 10 : 2)
             const d = Math.max(Math.abs(dx), Math.abs(dy))
             w += (range - d + 1) * 10
             mat.set(x, y, w)
@@ -718,6 +719,7 @@ class Step {
         if (!blocker.my) return;
         if (blocker.fatigue > 0) return;
         const dirs = [blocker.pos.getDirectionTo(this.creep.pos)];
+        const t = Game.map.getRoomTerrain(this.creep.pos.roomName);
         for (let dx = -1; dx <= 1; dx++) {
             const x = blocker.pos.x + dx;
             if (x <= 0 || x >= 49) continue;
@@ -726,7 +728,7 @@ class Step {
                 const y = blocker.pos.y + dy;
                 if (y === this.creep.pos.y && x === this.creep.pos.x) continue;
                 if (y <= 0 || y >= 49) continue;
-                if (Game.map.getTerrainAt(x, y, this.creep.pos.roomName) === 'wall') continue;
+                if (t.get(x,y) === TERRAIN_MASK_WALL) continue;
                 const p = new RoomPosition(x, y, blocker.pos.roomName);
                 const d = blocker.pos.getDirectionTo(p);
                 if (p.lookFor(LOOK_CREEPS).length > 0) continue;

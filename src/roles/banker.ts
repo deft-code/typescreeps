@@ -58,6 +58,7 @@ class Banker extends Carry {
                 }
             }
         }
+        return false
     }
 
     *taskGetEnergy(terminal = true, store = true) {

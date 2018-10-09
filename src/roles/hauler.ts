@@ -89,10 +89,12 @@ class Hauler extends Carry {
     planNeedFill(): EnergyStruct | StoreStructure | null {
         // TODO plan other energy structs.
         let ret: Array<EnergyStruct | StoreStructure> = [];
-        ret.concat(_.filter(this.mission.ai.outconts,
-            c => c.store.energy < 0.75 * c.storeCapacity && c.storeFree > 100));
-        ret.concat(_.filter(this.mission.ai.index.get(STRUCTURE_LAB),
-            l => l.energyFree > 0));
+        ret = this.mission.ai.outconts.filter(
+            c => c.store.energy < 0.75 * c.storeCapacity && c.storeFree > 100);
+        let es: EnergyStruct[] = []
+        es = es.concat(this.mission.ai.index.get(STRUCTURE_LAB));
+        es = es.concat(this.mission.ai.index.get(STRUCTURE_POWER_SPAWN));
+        ret = ret.concat(es.filter(l => l.energyFree > 0));
 
         return this.planNear(ret);
     }

@@ -58,7 +58,7 @@ export class Debuggable {
     }
 
     dlog(...str: any[]) {
-        if (this.debug) this.log(...str);
+        if (this.debug) console.log(location(2), this.toString(), ...str);
     }
 
     log(...str: any[]) {

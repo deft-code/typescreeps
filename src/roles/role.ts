@@ -104,12 +104,12 @@ export class Role extends PCreep {
         }
         if (ret.done) {
             this._loop = this.loop();
-            if(!newLoop) {
-            ret = this._loop.next();
-            if(ret.value === 'again' && !twice) {
+            if (!newLoop) {
                 ret = this._loop.next();
+                if (ret.value === 'again' && !twice) {
+                    ret = this._loop.next();
+                }
             }
-        }
         }
         this.dlog("ran", ret.value)
     }
