@@ -94,6 +94,7 @@ class Hauler extends Carry {
         let es: EnergyStruct[] = []
         es = es.concat(this.mission.ai.index.get(STRUCTURE_LAB));
         es = es.concat(this.mission.ai.index.get(STRUCTURE_POWER_SPAWN));
+        es = es.concat(this.mission.ai.index.get(STRUCTURE_NUKER));
         ret = ret.concat(es.filter(l => l.energyFree > 0));
 
         return this.planNear(ret);
