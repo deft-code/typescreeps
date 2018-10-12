@@ -1,13 +1,13 @@
 import { Role } from "./role";
 import { isEnergyStructure, isStore } from "guards";
 import { RoomAI } from "ai/ai";
-import { DynamicLocalSpawner } from "spawners";
+import { UpToCloseSpawner } from "spawners";
 import { Carry } from "./carry";
 
 @Role.register
 class Thief extends Carry {
     static spawner(name: string) {
-        return new DynamicLocalSpawner(name, [CARRY])
+        return new UpToCloseSpawner(name, [CARRY], 1200)
     }
 
     *loop(): IterableIterator<string | boolean> {

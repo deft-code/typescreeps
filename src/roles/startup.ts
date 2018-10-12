@@ -19,7 +19,7 @@ function sourceFree(ai: RoomAI) {
 }
 
 class StartupSpawner extends DynamicLocalSpawner {
-    energyAIs(ais: RoomAI[]) {
+    energyFilter(ais: RoomAI[]) {
         return _.filter(ais, ai => ai.room!.energyAvailable >= 300)
     }
 }

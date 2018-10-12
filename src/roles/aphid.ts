@@ -8,7 +8,7 @@ import { errStr } from "debug";
 import { buildBody } from "body";
 
 class AphidSpawner extends DynamicLocalSpawner {
-    energyAIs(ais: RoomAI[]) {
+    energyFilter(ais: RoomAI[]) {
         return ais.filter(ai => {
             const e = ai.room!.energyAvailable;
             const c = ai.room!.energyCapacityAvailable;

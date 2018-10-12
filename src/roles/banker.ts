@@ -4,7 +4,7 @@ import { StaticLocalSpawner } from "spawners";
 import { RoomAI } from "ai/ai";
 
 class BankerSpawner extends StaticLocalSpawner {
-    energyAIs(ais: RoomAI[]) {
+    energyFilter(ais: RoomAI[]) {
         return _.filter(ais, ai => ai.room!.energyAvailable >= 250)
     }
 }
@@ -16,7 +16,7 @@ const minE = TERMINAL_CAPACITY/100
 @Role.register
 class Banker extends Carry {
     static spawner(name: string) {
-        return new BankerSpawner(name, MOVE, CARRY, CARRY, CARRY, CARRY);
+        return new BankerSpawner(name, [MOVE, CARRY, CARRY, CARRY, CARRY]);
     }
 
     *loop() {

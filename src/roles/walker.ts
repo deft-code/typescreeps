@@ -27,7 +27,7 @@ class Walker extends Role {
     }
 
     static spawner(name: string) {
-        return new StaticLocalSpawner(name, MOVE)
+        return new StaticLocalSpawner(name, [MOVE])
     }
 
     after() {

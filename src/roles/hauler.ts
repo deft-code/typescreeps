@@ -7,8 +7,10 @@ import { isEnergyStructure } from "guards";
 import { pickNonEnergy } from "lib";
 
 class HaulerSpawner extends DynamicLocalSpawner {
-    energyAIs(ais: RoomAI[]) {
-        return _.filter(ais, ai => 3 * ai.room!.energyAvailable >= ai.room!.energyCapacityAvailable)
+    energyFilter(ais: RoomAI[]) {
+        return _.filter(ais, ai =>
+             3 * ai.room!.energyAvailable >= ai.room!.energyCapacityAvailable &&
+             ai.room!.energyAvailable > 800);
     }
     body(ai: RoomAI) {
         const mn = 800;

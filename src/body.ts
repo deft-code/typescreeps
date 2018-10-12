@@ -58,3 +58,7 @@ export function buildBody(body: BodyPartConstant[], energy: number, move = 1, ba
     }
     return parts
 }
+
+export function cost(body: BodyPartConstant[]) {
+    return _.sum(body, part => BODYPART_COST[part])
+}

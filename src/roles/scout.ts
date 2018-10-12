@@ -5,9 +5,9 @@ import { Move } from "./move";
 
 
 class ScoutSpawner extends StaticCloseSpawner {
-    energyAIs(ais: RoomAI[]) {
+    energyFilter(ais: RoomAI[]) {
         return ais.filter(ai => ai.room!.energyAvailable > 300
-            || ai.room!.energyAvailable === ai.room!.energyCapacityAvailable);
+            || ai.room!.energyAvailable >= ai.room!.energyCapacityAvailable);
     }
 }
 
