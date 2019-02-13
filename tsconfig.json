@@ -11,6 +11,8 @@
     "moduleResolution": "Node",
     "outDir": "distjs",
     "baseUrl": "src/",
+    "inlineSources": true,
+    "inlineSourceMap": true,
     "sourceMap": false,
     "strict": true,
     "experimentalDecorators": true,
