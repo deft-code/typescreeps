@@ -5,7 +5,9 @@ import { StartupAI } from './startup'
 const gRooms = new Map<string, RoomAI>();
 
 function calcAI(room: Room): string {
-    return 'startup';
+    const ctrler = _.first(room.find(FIND_MY_STRUCTURES, {filter: {structureType: STRUCTURE_CONTROLLER}}))
+    if (ctrler) return 'startup'
+    return 'room';
 }
 
 export function findAI(name: string): RoomAI {

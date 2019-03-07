@@ -1,5 +1,19 @@
 import { Logic } from "./logic";
+import { Role } from 'roles/role';
 import { run } from "spawners";
+
+export class SpotEditorLogic extends Logic {
+    isValid() {
+        return this.colorCheck(COLOR_ORANGE, COLOR_ORANGE);
+    }
+
+    run() {
+        const roomName = Role.calcMission(this.name);
+        if (roomName !== this.pos.roomName) {
+            this.log("Need to roomify");
+        }
+    }
+}
 
 export class RoomSpotLogic extends Logic {
     isValid() {

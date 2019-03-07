@@ -23,7 +23,6 @@ const when = Game.time % 10
 declare const require: {timestamp: number}
 
 export function loop() {
-  debug.log("testing")
   initCache()
   clearCache()
 
@@ -32,15 +31,15 @@ export function loop() {
 
   const logic = _.map(Game.flags, f => f.logic);
 
-  const combats = _.filter(ais, ai => ai.hostiles.length > 0);
+  const combats = _.remove(ais, ai => ai.hostiles.length > 0);
   shed.run(combats, 500, ai => ai.run());
   shed.run(combats, 1500, ai => ai.after());
 
-  const claimed = _.filter(ais, ai => ai.room.controller && ai.room.controller.my && ai.hostiles.length === 0);
+  const claimed = _.remove(ais, ai => ai.room.controller && ai.room.controller.my);
   shed.run(claimed, 2000, ai => ai.run());
   shed.run(claimed, 2000, ai => ai.after());
 
-  const remotes = _.filter(ais, ai => ai.room.controller && !ai.room.controller.my && ai.hostiles.length === 0);
+  const remotes = ais;
   shed.run(remotes, 3000, ai => ai.run());
   shed.run(remotes, 3000, ai => ai.after());
 

@@ -121,7 +121,9 @@ export class Role extends PCreep {
     get memory() { return this.o.memory }
     get mission() {
         const mname = Role.calcMission(this.name)
-        return Game.flags[mname].logic as MissionLogic
+        const flag = Game.flags[mname];
+        if(!flag) this.o.suicide()
+        return flag.logic as MissionLogic
     }
 
 

@@ -5,8 +5,9 @@ import { Logic } from './logic';
 import { MissionLogic } from './mission';
 import { RemoteMission } from './remote';
 import { Role } from 'roles/role';
-import { RoomSpotLogic } from './spots';
+import { RoomSpotLogic, SpotEditorLogic } from './spots';
 import { StartupMission } from './startup';
+import { FarmLogic } from './farm';
 import * as debug from 'debug'
 
 Object.defineProperty(Flag.prototype, 'logic', {
@@ -51,6 +52,14 @@ function makeLogic(f: Flag, old: Logic | undefined): Logic {
         case COLOR_ORANGE:
             switch (color) {
                 case COLOR_PURPLE: return new RoomSpotLogic(f.name, old);
+                case COLOR_ORANGE:
+                    switch (role) {
+                        case 'spots': return new SpotEditorLogic(f.name, old);
+                    }
+            }
+        case COLOR_WHITE:
+            switch (color) {
+                case COLOR_YELLOW: return new FarmLogic(f.name, old);
             }
     }
     return new Logic(f.name, old);

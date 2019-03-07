@@ -37,13 +37,17 @@ export class Spawner {
   spawn(avoid: Set<string>): ScreepsReturnCode {
     if (this.cancelled) return ERR_NAME_EXISTS
     const possible = this.distFilter()
+    log("all possible rooms", this, possible.map(p => p.name));
     const available = this.energyFilter(possible)
+    log("energy ais", this, available.map(p => p.name));
     for (const ai of available) {
       if (avoid.has(ai.name)) continue
       const spawn = this.selectSpawn(ai.spawns)
+      log("selected spawn", this, spawn, ai, ai.name, ai.spawns)
       if (!spawn) continue
       const err = spawn.spawnCreep(this.body(ai), this.name)
       if (err === OK) avoid.add(ai.name)
+      log("spawning error", this, spawn, err)
       return err
     }
     return ERR_BUSY
@@ -128,6 +132,7 @@ export class Spawner {
 
 let gSpawners: Spawner[] = []
 function insertSpawner(spawner: Spawner) {
+  log("new spawner", spawner)
   const i = _.sortedIndex(gSpawners, spawner, s => s.priority)
   gSpawners.splice(i, 0, spawner)
 }
@@ -138,7 +143,7 @@ export function run() {
   for (const spawner of gSpawners) {
     if (!avoid.has(spawner.name)) {
       const err = spawner.spawn(avoid)
-      log("spawning", spawner)
+      log("spawning", spawner, err)
       if (err === OK) {
         avoid.add(spawner.mission.flag.pos.roomName)
         continue

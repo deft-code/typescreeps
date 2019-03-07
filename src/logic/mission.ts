@@ -45,14 +45,16 @@ export class MissionLogic extends Logic {
         if (n < 1) return false
         const eggs = this.forRole(role, this.eggs)
         let sum = eggs.length * CREEP_LIFE_TIME;
+        this.dlog('eggs', role, eggs, sum)
 
         const actors = this.forRole(role, this.actors)
-        //this.log('actors', role, actors)
+        this.dlog('actors', role, actors)
 
         for (const actor of actors) {
-            sum += (actor.o && actor.o.ticksToLive || CREEP_LIFE_TIME) - actor.spawnTime
+            if (!actor.o) continue
+            sum += (actor.o.ticksToLive || CREEP_LIFE_TIME) - actor.spawnTime
         }
-        //this.log(role, 'sum', sum)
+        this.dlog(role, 'sum', sum)
         if (sum <= (n - 1) * CREEP_LIFE_TIME) {
             this.layEgg(role)
             return true

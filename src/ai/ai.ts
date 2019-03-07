@@ -35,6 +35,10 @@ export class RoomAI extends debug.Debuggable {
         this.index = new StructIndex(name);
     }
 
+    toString(): string {
+        return this.kind + ':' + this.name;
+    }
+
     get room(): Room {
         return Game.rooms[this.name];
     }
@@ -101,13 +105,13 @@ export class RoomAI extends debug.Debuggable {
 
     get repairs() {
         if (!this.room) return []
-        let minHits:number = WALL_HITS_MAX
+        let minHits: number = WALL_HITS_MAX
         const reps = this.room.find(FIND_STRUCTURES, {
             filter: (s: AnyStructure) => {
                 switch (s.structureType) {
                     case STRUCTURE_RAMPART:
                     case STRUCTURE_WALL:
-                        if(minHits > s.hits) {
+                        if (minHits > s.hits) {
                             minHits = s.hits
                         }
                         return s.hits < this.maxHits(s);
@@ -176,7 +180,7 @@ export class RoomAI extends debug.Debuggable {
         return bestSpot
     }
 
-    minHits:number = WALL_HITS_MAX
+    minHits: number = WALL_HITS_MAX
     maxHits(wall: AnyStructure) {
         if (wall.structureType !== STRUCTURE_WALL && wall.structureType !== STRUCTURE_RAMPART) return wall.hitsMax
         if (!wall.room.controller) return wall.hitsMax
@@ -192,7 +196,7 @@ export class RoomAI extends debug.Debuggable {
             case 7: max = 6000000; break
             case 8: max = 21000000; break
         }
-        return Math.min(max, wall.hitsMax, this.minHits + 1000000, 2*this.minHits)
+        return Math.min(max, wall.hitsMax, this.minHits + 1000000, 2 * this.minHits)
     }
 
     getSpot(name: string) {

@@ -17,6 +17,7 @@
 
 # Screeps Config
 screeps.json
+credentials.js
 
 # Numerous always-ignore extensions
 *.diff

@@ -2,7 +2,19 @@ import * as debug from 'debug';
 import { findAI } from 'ai/allai';
 
 export class Logic extends debug.Debuggable {
-    constructor(public readonly name: string, old: Logic | undefined) { super() }
+    children: string[]
+    parent: string | null
+    constructor(public readonly name: string, old: Logic | undefined) {
+        super();
+        const prefix = name + '_';
+        this.children = _.filter(Game.flags, f => f.name.startsWith(prefix)).map(f=>f.name);
+
+        this.parent = null;
+        const parts = this.name.split('_');
+        if(parts.length > 1 && Game.flags[parts[0]]) {
+            this.parent = Game.flags[parts[0]].name;
+        }
+    }
 
     get pos() { return this.flag.pos }
     toString() { return this.name }
@@ -14,6 +26,17 @@ export class Logic extends debug.Debuggable {
         return this.flag.color === color && this.flag.secondaryColor === secondary;
     }
     isValid() { return true }
-    run() { }
-    darkRun() { }
+    parentCheck() {
+        if(this.parent && !Game.flags[this.parent]) {
+            this.flag.remove();
+            return false
+        }
+        return true
+    }
+    run() {
+        this.parentCheck()
+    }
+    darkRun() {
+        this.parentCheck()
+    }
 }

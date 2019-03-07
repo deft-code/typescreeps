@@ -17,7 +17,6 @@ function oneHeal(towers: StructureTower[], creep: Creep | undefined) { return on
 function oneRepair(towers: StructureTower[], struct: AnyStructure | undefined) { return one(towers, StructureTower.prototype.repair, struct) }
 
 
-
 export class StartupAI extends RoomAI {
     get kind() { return 'startup' }
 
@@ -113,7 +112,7 @@ export class StartupAI extends RoomAI {
             return
         }
         const core = this.getSpot('core');
-        if(core) {
+        if (core) {
             this.room.visual.circle(core);
         }
         // const mat = defaultRewalker().getMatrix(this.name)
@@ -131,16 +130,16 @@ export class StartupAI extends RoomAI {
     after() {
         super.after();
         const links = this.index.get(STRUCTURE_LINK);
-        for(const outlink of links) {
-            if(outlink.cooldown> 0) continue;
-            if(outlink.energy < outlink.energyFree) continue;
+        for (const outlink of links) {
+            if (outlink.cooldown > 0) continue;
+            if (outlink.energy < outlink.energyFree) continue;
 
             const inlink = _.find(_.shuffle(links), l => outlink.id !== l.id && outlink.energy - l.energy > 100);
-            if(!inlink) continue;
+            if (!inlink) continue;
 
             const de = outlink.energy - inlink.energy;
 
-            outlink.transferEnergy(inlink, de/2);
+            outlink.transferEnergy(inlink, de / 2);
         }
     }
 }

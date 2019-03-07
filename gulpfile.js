@@ -7,31 +7,20 @@ const gulp = require('gulp');
 const gulpDotFlatten = require('./libs/gulp-dot-flatten.js');
 const PluginError = require('gulp-util').PluginError;
 const ts = require('gulp-typescript');
-const tslint = require('gulp-tslint');
 const tsProject = ts.createProject('tsconfig.json', { typescript: require('typescript') });
+const screeps = require('gulp-screeps')
+const credentials = require('./credentials.js')
 
 /*********/
 /* TASKS */
 /*********/
-
-
-gulp.task('lint', function() {
-  log('linting ...');
-  return gulp.src('src/**/*.ts')
-    .pipe(tslint({ formatter: 'prose' }))
-    .pipe(tslint.report({
-      summarizeFailureOutput: true,
-      emitError: true
-    }));
-});
-
 
 gulp.task('clean', function () {
   return gulp.src(['dist/*', 'distjs/*'], { read: false, allowEmpty: true })
     .pipe(clean());
 });
 
-gulp.task('compile', ['clean'], function () {
+gulp.task('compile', [], function () {
     return tsProject.src()
       .pipe(tsProject())
       .on('error', (err) => global.compileFailed = true)
@@ -49,6 +38,16 @@ gulp.task('upload', ['flatten'], function () {
   return gulp.src('dist/*.js')
     .pipe(gulpScreepsUpload(config.user.email, config.user.password, buildConfig.branch, 0));
 });
+
+gulp.task('ptr', ['flatten'], function() {
+  credentials.ptr = true
+  return gulp.src('dist/*')
+    .pipe(screeps(credentials))
+})
+
+gulp.task('watchPtr', ['ptr'], function() {
+  return gulp.watch('src/**/*', ['ptr'])
+})
 
 gulp.task('copyLocal', ['flatten'], function() {
   return gulp.src('dist/*')
